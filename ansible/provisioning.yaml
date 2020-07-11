@@ -1,0 +1,17 @@
+- name: Create a PostgreSQL DB server
+  hosts: postgres
+  vars_files:
+    - group_vars/postgres.yaml
+  roles:
+    - postgres
+
+- hosts: node
+  vars_files:
+    - roles/nodenvm/defaults/main.yml
+    - group_vars/postgres.yaml
+  roles:
+    - role: nodenvm
+      nodejs_version: "12.18.2"
+      nvm_commands:
+       - "nvm exec default npm install"
+    - role: app

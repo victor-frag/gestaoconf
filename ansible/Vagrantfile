@@ -1,0 +1,28 @@
+Vagrant.configure("2") do |config|
+  config.vm.box = "ubuntu/bionic64"
+  config.vm.define "controle" do |m|
+    m.vm.network "private_network", ip: "192.168.33.6"
+    m.vm.provider "virtualbox" do |vb|
+      # Customize the amount of memory on the VM:
+      vb.memory = "512"
+    end
+  end
+  config.vm.define "node" do |m|
+    m.vm.network "private_network", ip: "192.168.33.8"
+    m.vm.provider "virtualbox" do |vb|
+      # Customize the amount of memory on the VM:
+      vb.memory = "1024"
+    end
+    # Já vamos deixá-la preparada para rodar o Ansible
+    m.vm.provision "shell", inline: "sudo apt-get update && sudo apt-get install -y python"
+  end
+  config.vm.define "bd" do |m|
+    m.vm.network "private_network", ip: "192.168.33.10"
+    m.vm.provider "virtualbox" do |vb|
+      # O MySQL dá erro ao subir o serviço com menos de 1GB de RAM:
+      vb.memory = "1024"
+    end
+    # Já vamos deixá-la preparada para rodar o Ansible
+    m.vm.provision "shell", inline: "sudo apt-get update && sudo apt-get install -y python"
+  end
+end
