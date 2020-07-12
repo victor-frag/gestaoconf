@@ -1,11 +1,6 @@
-- name: Git Clone Repo
-  git: repo=https://github.com/joaquimpedrooliveira/node-js-getting-started.git dest=/home/vagrant/app update=yes
-
 - name: Running NPM install
   npm: 
-    path: /home/vagrant/app
-  environment:
-    PATH: /home/vagrant/.nvm/versions/node/v12.18.2/bin:{{ ansible_env.PATH }}
+    path: /tmp/node-js-getting-started
 
 - name: populate /etc/environment
   lineinfile:
@@ -14,36 +9,28 @@
     regexp: "^{{ item.key }}="
     line: "{{ item.key }}={{ item.value}}"
   with_items: 
-    - { key: 'DATABASE_URL', value: 'postgresql://{{ db_user }}:{{ db_password }}@192.168.33.10:5432/{{ db_name }}' }
+    - { key: 'DATABASE_URL', value: 'postgresql://{{ db_user }}:{{ db_password }}@{{ db_ip }}:5432/{{ db_name }}' }
   become: yes
 
 - name: "Install forever (to run Node.js app)."
   npm: name=forever global=yes state=present
-  environment:
-    PATH: /home/vagrant/.nvm/versions/node/v12.18.2/bin:{{ ansible_env.PATH }}
 
 - name: "Check list of Node.js apps running."
   command: forever list
   register: forever_list
   changed_when: false
-  environment:
-    PATH: /home/vagrant/.nvm/versions/node/v12.18.2/bin:{{ ansible_env.PATH }}
 
 - name: "Stop example Node.js app."
-  command: forever stop /home/vagrant/app/index.js
-  when: "forever_list.stdout.find('/home/vagrant/app/index.js') >= 1"
-  environment:
-    PATH: /home/vagrant/.nvm/versions/node/v12.18.2/bin:{{ ansible_env.PATH }}
+  command: forever stop /tmp/node-js-getting-started/index.js
+  when: "forever_list.stdout.find('/tmp/node-js-getting-started/index.js') >= 1"
 
 - name: "Check list of Node.js apps running."
   command: forever list
   register: forever_list
   changed_when: false
-  environment:
-    PATH: /home/vagrant/.nvm/versions/node/v12.18.2/bin:{{ ansible_env.PATH }}
 
 - name: "Start example Node.js app."
-  command: forever start /home/vagrant/app/index.js
-  when: "forever_list.stdout.find('/home/vagrant/app/index.js') == -1"
+  command: forever start /tmp/node-js-getting-started/index.js
+  when: "forever_list.stdout.find('/tmp/node-js-getting-started/index.js') == -1"
   environment:
-    PATH: /home/vagrant/.nvm/versions/node/v12.18.2/bin:{{ ansible_env.PATH }}
+    DATABASE_URL: postgresql://{{ db_user }}:{{ db_password }}@{{ db_ip }}:5432/{{ db_name }}
